@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário de Disparos — Maio 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --sans:'DM Sans',sans-serif; --mono:'DM Mono',monospace;
+  --bg:#f5f4f0; --surface:#fff; --border:#d6d4cd;
+  --text:#1a1a1a; --text2:#555; --text3:#999;
+  --green:#16a34a; --red:#dc2626; --amber:#d97706;
+}
+body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:13px; line-height:1.45; }
+
+header { background:#1a2940; color:#fff; padding:20px 32px 16px; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+header h1 { font-size:19px; font-weight:600; letter-spacing:-0.2px; }
+header p  { font-size:12px; color:rgba(255,255,255,0.5); margin-top:3px; }
+.sync-row { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; color:rgba(255,255,255,0.5); }
+.dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.dot.loading { animation:pulse 1s ease infinite; background:#fbbf24; }
+.dot.error   { background:#f87171; }
+.dot.ok      { background:#4ade80; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.refresh-btn { font-family:var(--mono); font-size:11px; padding:4px 10px; border-radius:5px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:rgba(255,255,255,0.6); cursor:pointer; transition:all 0.12s; margin-top:6px; }
+.refresh-btn:hover { background:rgba(255,255,255,0.1); color:#fff; }
+
+.weeks-nav { background:#fff; border-bottom:2px solid var(--border); padding:0 32px; display:flex; overflow-x:auto; }
+.week-btn { font-family:var(--mono); font-size:12px; padding:12px 20px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; transition:all 0.12s; white-space:nowrap; }
+.week-btn:hover  { color:var(--text); background:#f9f8f4; }
+.week-btn.active { color:#1a2940; border-bottom-color:#1a2940; font-weight:600; }
+
+main { padding:24px 32px 56px; }
+.warning-bar { margin-bottom:20px; padding:10px 14px; border-radius:6px; border:1px solid #f5c542; background:#fffbea; font-size:12px; color:#7a5c00; }
+.week-section { display:none; }
+.week-section.active { display:block; }
+.section-header { display:flex; align-items:baseline; gap:12px; margin-bottom:14px; }
+.section-title { font-size:15px; font-weight:600; }
+.section-range { font-family:var(--mono); font-size:12px; color:var(--text3); }
+
+.summary-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:20px; }
+.scard { background:var(--surface); border-radius:10px; border:1px solid var(--border); padding:12px 14px; }
+.scard-label { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text3); margin-bottom:5px; }
+.scard-value { font-size:20px; font-weight:600; color:var(--text); line-height:1; }
+.scard-sub   { font-family:var(--mono); font-size:11px; color:var(--text3); margin-top:4px; }
+.scard-value.good { color:var(--green); }
+.scard-value.warn { color:var(--amber); }
+.scard-value.bad  { color:var(--red); }
+
+.cal-wrap { overflow-x:auto; }
+.state-box { text-align:center; padding:60px 20px; color:var(--text3); font-family:var(--mono); font-size:13px; }
+.spinner { width:28px; height:28px; border:3px solid rgba(0,0,0,0.08); border-top-color:#1a2940; border-radius:50%; animation:spin 0.7s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to{transform:rotate(360deg);} }
+
+table { border-collapse:collapse; width:100%; min-width:820px; background:var(--surface); border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+.wk-header { background:#1a2940; color:#fff; text-align:center; font-family:var(--mono); font-size:12px; font-weight:500; padding:7px 8px; letter-spacing:0.04em; border-right:1px solid rgba(255,255,255,0.1); }
+.day-header { background:#253650; color:rgba(255,255,255,0.75); text-align:center; font-family:var(--mono); font-size:11px; font-weight:400; padding:6px 8px; white-space:nowrap; border-right:1px solid rgba(255,255,255,0.08); }
+td.row-label { font-weight:600; font-size:12px; padding:10px 12px; text-align:center; vertical-align:middle; white-space:nowrap; min-width:92px; border-right:2px solid rgba(0,0,0,0.18); }
+th.col-sep, td.col-sep { width:6px; background:#e0deda; border-left:1px solid #ccc; border-right:1px solid #ccc; padding:0; }
+td.day-cell { text-align:center; vertical-align:top; padding:8px 6px; border-right:1px solid #eceae4; min-width:105px; font-size:12px; line-height:1.4; }
+td.day-cell.empty { color:var(--text3); background:#fafaf8; vertical-align:middle; }
+td.day-cell.pause { background:#f0eee8; color:#aaa; font-size:11px; vertical-align:middle; }
+.proj-contacts { font-weight:600; font-size:13px; display:block; }
+.proj-lev  { font-family:var(--mono); font-size:11px; display:block; margin-top:2px; opacity:0.85; }
+.proj-note { font-size:10px; display:block; margin-top:3px; opacity:0.7; line-height:1.3; }
+.exec-badge { display:inline-block; font-size:9px; font-family:var(--mono); padding:1px 5px; border-radius:3px; background:rgba(255,255,255,0.28); margin-bottom:3px; }
+.real-divider { border-top:1px dashed rgba(0,0,0,0.18); margin:6px 0 4px; padding-top:5px; }
+.real-label   { font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:0.06em; color:#888; display:block; margin-bottom:2px; }
+.real-lev     { font-weight:700; font-size:15px; display:block; }
+.real-lev.up  { color:#15803d; }
+.real-lev.eq  { color:#2563eb; }
+.real-lev.dn  { color:#dc2626; }
+.real-oferta  { font-size:10px; display:block; margin-top:2px; color:#555; font-style:italic; }
+.real-custo   { font-family:var(--mono); font-size:10px; display:block; margin-top:3px; color:#888; }
+
+.b-outbound td.row-label { background:#1a3a5c; color:#fff; }
+.b-outbound td.active    { background:#d0e8f8; color:#0d2845; }
+.b-outbound td.executed  { background:#b8d8f0; color:#0d2845; }
+.b-anos td.row-label     { background:#2e5220; color:#fff; }
+.b-anos td.active        { background:#d2edbc; color:#1e3a12; }
+.b-anos td.executed      { background:#bce3a4; color:#1e3a12; }
+.b-conc td.row-label     { background:#7a1a1a; color:#fff; }
+.b-conc td.active        { background:#f8d8d8; color:#5a1010; }
+.b-conc td.executed      { background:#f0c0c0; color:#5a1010; }
+.b-retr td.row-label     { background:#5c3a00; color:#fff; }
+.b-retr td.active        { background:#f8e8c0; color:#3d2500; }
+.b-retr td.executed      { background:#f0dca0; color:#3d2500; }
+.b-rht td.row-label      { background:#3b2d6e; color:#fff; }
+.b-rht td.active         { background:#e4daf8; color:#261d55; }
+.b-rht td.executed       { background:#d0c4f4; color:#261d55; }
+.b-rpt td.row-label      { background:#1a5c4a; color:#fff; }
+.b-rpt td.active         { background:#c0f0e0; color:#0e3d30; }
+.b-rpt td.executed       { background:#a0e4cc; color:#0e3d30; }
+
+tr.totals-row td { background:#1a2940; color:rgba(255,255,255,0.85); font-family:var(--mono); font-size:11px; text-align:center; padding:7px 6px; border-right:1px solid rgba(255,255,255,0.1); }
+tr.subtotal-row td { background:#2d4a7a; color:#fff; font-family:var(--mono); font-size:13px; font-weight:600; text-align:center; padding:8px 6px; border-right:1px solid rgba(255,255,255,0.15); letter-spacing:0.04em; }
+
+/* RESULT TABS */
+.res-tabs { display:flex; gap:4px; margin-bottom:16px; }
+.res-tab { font-family:var(--mono); font-size:12px; padding:7px 18px; border:1px solid var(--border); border-radius:7px; background:#fff; cursor:pointer; color:var(--text2); transition:all 0.12s; }
+.res-tab:hover  { background:#f0eee8; color:var(--text); }
+.res-tab.active { background:#1a2940; color:#fff; border-color:#1a2940; }
+.res-panel { display:none; }
+.res-panel.active { display:block; }
+
+.disparo-wrap { overflow-x:auto; margin-top:8px; }
+.disparo-wrap table { min-width:700px; font-size:12px; }
+.disparo-wrap th { background:#1a2940; color:rgba(255,255,255,0.8); font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.06em; padding:7px 10px; text-align:left; border-right:1px solid rgba(255,255,255,0.08); white-space:nowrap; }
+.disparo-wrap td { padding:8px 10px; border-bottom:1px solid #eceae4; border-right:1px solid #eceae4; vertical-align:middle; }
+.disparo-wrap tr:hover td { background:#f8f7f3; }
+.tag-b { display:inline-block; font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px; white-space:nowrap; }
+.num { font-family:var(--mono); }
+.wk-sep td { background:#e8f0fb; font-weight:600; font-size:12px; color:#1a2940; }
+
+.bar-wrap { height:5px; background:#e8e6e0; border-radius:3px; margin-top:4px; }
+.bar-fill { height:5px; border-radius:3px; }
+
+.legend-section { margin-top:40px; border-top:1px solid var(--border); padding-top:28px; }
+.legend-title { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text3); margin-bottom:14px; }
+.legend-grid  { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; margin-bottom:24px; }
+.legend-card  { border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+.legend-card-header { padding:9px 12px; font-weight:600; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+.legend-card-body   { padding:10px 12px; background:#fff; font-size:12px; color:var(--text2); line-height:1.9; }
+.legend-card-body strong { color:var(--text); font-weight:600; }
+.rules-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+.rule-item  { padding:12px 14px; border-radius:8px; border:1px solid var(--border); background:#fff; font-size:12px; color:var(--text2); line-height:1.5; }
+.rule-item strong { display:block; color:var(--text); font-weight:600; margin-bottom:2px; }
+.rule-item.danger { border-left:3px solid #c53030; }
+.rule-item.info   { border-left:3px solid #2b6cb0; }
+
+.debug-box { margin-bottom:16px; padding:10px 14px; border-radius:8px; background:#1a2940; color:#a8c4e0; font-family:var(--mono); font-size:11px; line-height:1.8; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Calendário de Disparos — Maio 2026</h1>
+    <p id="baseDate">Carregando dados da planilha...</p>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end">
+    <div class="sync-row">
+      <span class="dot loading" id="syncDot"></span>
+      <span id="syncText">buscando Google Sheets...</span>
+    </div>
+    <button class="refresh-btn" onclick="loadData()">↻ Atualizar</button>
+  </div>
+</header>
+
+<nav class="weeks-nav">
+  <button class="week-btn active" onclick="showWeek('all')">Visão Geral</button>
+  <button class="week-btn" onclick="showWeek('s1')">S1 · 04–07/05</button>
+  <button class="week-btn" onclick="showWeek('s2')">S2 · 11–14/05</button>
+  <button class="week-btn" onclick="showWeek('s3')">S3 · 18–21/05</button>
+  <button class="week-btn" onclick="showWeek('s4')">S4 · 25–28/05</button>
+  <button class="week-btn" onclick="showWeek('results')">📊 Resultados</button>
+</nav>
+
+<main>
+  <div class="warning-bar">⚠️ Base sujeita a variação ao longo do mês. Ajuste os volumes conforme base atualizada a cada semana antes de enviar.</div>
+
+  <!-- VISÃO GERAL -->
+  <div id="view-all" class="week-section active">
+    <div class="section-header"><span class="section-title">Calendário completo — Maio 2026</span></div>
+    <div id="cards-all"></div>
+    <div class="cal-wrap" id="cal-all"><div class="state-box"><div class="spinner"></div>Carregando...</div></div>
+  </div>
+
+  <!-- S1 -->
+  <div id="view-s1" class="week-section">
+    <div class="section-header"><span class="section-title">S1</span><span class="section-range">04/05 – 07/05/2026</span></div>
+    <div id="cards-s1"></div>
+    <div class="cal-wrap" id="cal-s1"><div class="state-box"><div class="spinner"></div>Carregando...</div></div>
+  </div>
+
+  <!-- S2 -->
+  <div id="view-s2" class="week-section">
+    <div class="section-header"><span class="section-title">S2</span><span class="section-range">11/05 – 14/05/2026</span></div>
+    <div id="cards-s2"></div>
+    <div class="cal-wrap" id="cal-s2"><div class="state-box"><div class="spinner"></div>Carregando...</div></div>
+  </div>
+
+  <!-- S3 -->
+  <div id="view-s3" class="week-section">
+    <div class="section-header"><span class="section-title">S3</span><span class="section-range">18/05 – 21/05/2026</span></div>
+    <div id="cards-s3"></div>
+    <div class="cal-wrap" id="cal-s3"><div class="state-box"><div class="spinner"></div>Carregando...</div></div>
+  </div>
+
+  <!-- S4 -->
+  <div id="view-s4" class="week-section">
+    <div class="section-header"><span class="section-title">S4</span><span class="section-range">25/05 – 28/05/2026</span></div>
+    <div id="cards-s4"></div>
+    <div class="cal-wrap" id="cal-s4"><div class="state-box"><div class="spinner"></div>Carregando...</div></div>
+  </div>
+
+  <!-- RESULTADOS — duas abas: Levantadas e Conversão -->
+  <div id="view-results" class="week-section">
+    <div class="section-header"><span class="section-title">Resultados reais por disparo</span></div>
+    <div class="debug-box" id="debug-box" style="display:none"></div>
+    <div class="res-tabs">
+      <button class="res-tab active" onclick="showResTab('lev')">🎯 Levantadas</button>
+      <button class="res-tab" onclick="showResTab('conv')">💰 Conversão</button>
+    </div>
+    <!-- Painel Levantadas -->
+    <div id="res-panel-lev" class="res-panel active">
+      <div id="cards-res-lev"></div>
+      <div class="disparo-wrap" id="table-res-lev"><div class="state-box"><div class="spinner"></div>Carregando...</div></div>
+    </div>
+    <!-- Painel Conversão -->
+    <div id="res-panel-conv" class="res-panel">
+      <div id="cards-res-conv"></div>
+      <div class="disparo-wrap" id="table-res-conv"><div class="state-box"><div class="spinner"></div>Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- LEGENDA -->
+  <div class="legend-section">
+    <p class="legend-title">Baldinhos · Bases e Expectativas</p>
+    <div class="legend-grid" id="legendGrid"></div>
+    <p class="legend-title" style="margin-top:20px">Regras Gerais</p>
+    <div class="rules-grid">
+      <div class="rule-item info"><strong>Frequência</strong>Outbound: até 4 disparos/semana (seg–qui). Demais: 1–2 dias/semana.</div>
+      <div class="rule-item info"><strong>Saturação de contato</strong>Mesmo contato só recebe disparo a cada 15 dias.</div>
+      <div class="rule-item info"><strong>Volume por disparo</strong>Outbound: base dividida pelos dias ativos (máx ~3.500/dia).</div>
+      <div class="rule-item danger"><strong>🚫 Não misturar baldinhos</strong>Nunca agrupar em um único disparo.</div>
+      <div class="rule-item danger"><strong>🚫 Playlist</strong>Histórico ruim. Não incluir até alinhamento com o comercial.</div>
+      <div class="rule-item danger"><strong>🚫 CS (Consultoria)</strong>Restrita a escolas acima de R$5k. Não disparar em massa.</div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const SHEET_KEY   = '2PACX-1vQWKXI1eEiqCKwpsJ7ulo3WUiu3bOFSrBpKXHuqqFcdE-a7KgkbkcU7EbWUH2c7fiymfzTKGqjYo9xq';
+const BRIEFING_GID = '279219086';
+
+// ─── BALDINHO META ────────────────────────────────────────────────────────────
+const BALDINHO_META = [
+  { key:'Outbound',        cls:'b-outbound', name:'Outbound',        hdr:'#1a3a5c', hdrT:'#fff' },
+  { key:'Anos Anteriores', cls:'b-anos',     name:'Anos Anteriores', hdr:'#2e5220', hdrT:'#fff' },
+  { key:'Concorrência',    cls:'b-conc',     name:'Concorrência',    hdr:'#7a1a1a', hdrT:'#fff' },
+  { key:'Retração',        cls:'b-retr',     name:'Retração',        hdr:'#5c3a00', hdrT:'#fff' },
+  { key:'Renov HT Pub',    cls:'b-rht',      name:'Renov HT Pub',    hdr:'#3b2d6e', hdrT:'#fff' },
+  { key:'Renov Part >4k',  cls:'b-rpt',      name:'Renov Part >4k',  hdr:'#1a5c4a', hdrT:'#fff' },
+];
+
+const STATIC_META = {
+  'Outbound':        { freq:'3–4 dias/sem', media:'~13 lev./disp.', melhor:'~18 lev./disp.' },
+  'Anos Anteriores': { freq:'1–2 dias/sem', media:'~10 lev./disp.', melhor:'~13 lev./disp.' },
+  'Concorrência':    { freq:'2 dias/sem',   media:'~6 lev./disp.',  melhor:'~12 lev./disp.' },
+  'Retração':        { freq:'2 dias/sem',   media:'~6 lev./disp.',  melhor:'~12 lev./disp.' },
+  'Renov HT Pub':    { freq:'1 dia/sem',    media:'~1–2 lev./disp.',melhor:'~2 lev./disp.'  },
+  'Renov Part >4k':  { freq:'1 dia/sem',    media:'~4–8 lev./disp.',melhor:'~8 lev./disp.'  },
+};
+
+const WEEKS_CFG = [
+  { id:'s1', label:'S1 • 04/05 – 07/05', days:['Segunda\n04/05','Terça\n05/05','Quarta\n06/05','Quinta\n07/05'], dates:['04/05','05/05','06/05','07/05'] },
+  { id:'s2', label:'S2 • 11/05 – 14/05', days:['Segunda\n11/05','Terça\n12/05','Quarta\n13/05','Quinta\n14/05'], dates:['11/05','12/05','13/05','14/05'] },
+  { id:'s3', label:'S3 • 18/05 – 21/05', days:['Segunda\n18/05','Terça\n19/05','Quarta\n20/05','Quinta\n21/05'], dates:['18/05','19/05','20/05','21/05'] },
+  { id:'s4', label:'S4 • 25/05 – 28/05', days:['Segunda\n25/05','Terça\n26/05','Quarta\n27/05','Quinta\n28/05'], dates:['25/05','26/05','27/05','28/05'] },
+];
+
+// ─── matchBaldinho ────────────────────────────────────────────────────────────
+// Renovação HT Pub  = Renovação + Pública + receita >= 5000
+// Renovação Part >4k = Renovação + Particular + receita >= 4000
+function matchBaldinho(rawBaldinho, rawTipo, rawReceita) {
+  if (!rawBaldinho) return null;
+  const lo = rawBaldinho.toLowerCase().trim();
+
+  if (lo.includes('outbound'))                          return BALDINHO_META.find(m => m.key === 'Outbound');
+  if (lo.includes('anos') || lo.includes('anterior'))   return BALDINHO_META.find(m => m.key === 'Anos Anteriores');
+  if (lo.includes('concorr'))                           return BALDINHO_META.find(m => m.key === 'Concorrência');
+  if (lo.includes('retra'))                             return BALDINHO_META.find(m => m.key === 'Retração');
+
+  if (lo.includes('renov')) {
+    const tipo   = (rawTipo    || '').toLowerCase();
+    const rec    = (rawReceita || '').toLowerCase();
+    const isPub  = tipo.includes('pub') || tipo.includes('públic') || tipo.includes('public');
+    const recNum = parseFloat(rec.replace(/[^\d,.]/g,'').replace(',','.')) || 0;
+    if (isPub  && recNum >= 5000) return BALDINHO_META.find(m => m.key === 'Renov HT Pub');
+    if (!isPub && recNum >= 4000) return BALDINHO_META.find(m => m.key === 'Renov Part >4k');
+    if (isPub)  return BALDINHO_META.find(m => m.key === 'Renov HT Pub');
+    return BALDINHO_META.find(m => m.key === 'Renov Part >4k');
+  }
+
+  return BALDINHO_META.find(m =>
+    lo.includes(m.key.toLowerCase().replace(/[^a-z0-9]/g,'')) ||
+    m.key.toLowerCase().replace(/[^a-z0-9]/g,'').includes(lo.replace(/[^a-z0-9]/g,''))
+  ) || null;
+}
+
+// ─── JSONP LOADER ─────────────────────────────────────────────────────────────
+function loadViaJSONP(gid) {
+  return new Promise((resolve, reject) => {
+    const cb = '__gviz_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    const url = `https://docs.google.com/spreadsheets/d/e/${SHEET_KEY}/pub?output=json&gid=${gid}&callback=${cb}&_=${Date.now()}`;
+    console.log('[JSONP] loading gid=' + gid + ' url=' + url);
+
+    const timer = setTimeout(() => {
+      cleanup();
+      console.log('[JSONP] TIMEOUT gid=' + gid);
+      reject(new Error('timeout gid=' + gid));
+    }, 12000);
+
+    const script = document.createElement('script');
+    const cleanup = () => { clearTimeout(timer); delete window[cb]; if (script.parentNode) script.remove(); };
+
+    window[cb] = d => {
+      console.log('[JSONP] SUCCESS gid=' + gid + ' table=' + (d && d.table ? 'ok rows=' + (d.table.rows||[]).length : 'no table'));
+      cleanup();
+      resolve(d);
+    };
+
+    script.onerror = (e) => {
+      console.log('[JSONP] SCRIPT ERROR gid=' + gid + ' src=' + script.src);
+      cleanup();
+      reject(new Error('load error gid=' + gid));
+    };
+
+    script.crossOrigin = 'anonymous';
+    script.src = url;
+    document.head.appendChild(script);
+    console.log('[JSONP] script injected gid=' + gid);
+  });
+}
+
+// Quick connectivity test — run immediately on page load
+(async function testConnectivity() {
+  const testUrl = `https://docs.google.com/spreadsheets/d/e/${SHEET_KEY}/pub?output=json&gid=0&callback=__test_${Date.now()}&_=${Date.now()}`;
+  console.log('[TEST] Testing URL directly: ' + testUrl);
+  try {
+    const res = await fetch(testUrl, { mode: 'no-cors' });
+    console.log('[TEST] fetch no-cors status: ' + res.type + ' ' + res.status);
+  } catch(e) {
+    console.log('[TEST] fetch failed: ' + e.message);
+  }
+  // Also test with image to check basic network
+  const img = new Image();
+  img.onload  = () => console.log('[TEST] google.com reachable via image');
+  img.onerror = () => console.log('[TEST] google.com NOT reachable via image');
+  img.src = 'https://www.google.com/favicon.ico?_=' + Date.now();
+})();
+
+// ─── PARSE GVIZ RESPONSE ──────────────────────────────────────────────────────
+function parseGviz(data) {
+  const cols    = (data.table && data.table.cols) || [];
+  const rows    = (data.table && data.table.rows) || [];
+  const headers = cols.map(c => (c.label || '').trim());
+  const parsed  = rows.map(r => (r.c || []).map(c => {
+    if (!c || c.v == null) return '';
+    return String(c.f !== undefined && c.f !== null ? c.f : c.v).trim();
+  }));
+  return { headers, rows: parsed };
+}
+
+// ─── FIND SHEETS ──────────────────────────────────────────────────────────────
+async function findSheets() {
+  let calSheet = null, briefingSheet = null;
+  const dbg = [];
+
+  // Briefing sheet: known gid
+  try {
+    const data = await loadViaJSONP(BRIEFING_GID);
+    const { headers, rows } = parseGviz(data);
+    dbg.push('briefing gid=' + BRIEFING_GID + ' → ' + rows.length + ' linhas');
+    dbg.push('headers: ' + headers.join(' | '));
+    if (rows.length > 0) dbg.push('linha 1: ' + rows[0].slice(0,6).join(' | '));
+    briefingSheet = { gid: BRIEFING_GID, headers, rows };
+  } catch (e) {
+    dbg.push('briefing ERRO gid=' + BRIEFING_GID + ': ' + e.message);
+  }
+
+  // Calendar sheet: scan gids 0–6
+  for (const gid of ['0','1','2','3','4','5','6']) {
+    if (calSheet) break;
+    try {
+      const data = await loadViaJSONP(gid);
+      const { headers, rows } = parseGviz(data);
+      const hFlat   = headers.join(' ').toLowerCase();
+      const allFlat = rows.slice(0, 5).flat().join(' ').toLowerCase();
+      const isCal   = (hFlat.includes('baldinho') || allFlat.includes('baldinho')) &&
+                      (allFlat.includes('outbound') || allFlat.includes('contatos') ||
+                       hFlat.includes('segunda') || hFlat.includes('04/05'));
+      dbg.push('cal gid=' + gid + ' isCal=' + isCal);
+      if (isCal) { calSheet = { gid, headers, rows }; break; }
+    } catch (e) {
+      dbg.push('cal gid=' + gid + ' erro: ' + e.message);
+    }
+  }
+
+  window.__dbg = dbg;
+  return { calSheet, briefingSheet };
+}
+
+// ─── PARSE CALENDAR ───────────────────────────────────────────────────────────
+function parseCalendar(headers, rows) {
+  let hdrIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].some(c => c.trim().toLowerCase() === 'baldinho')) { hdrIdx = i; break; }
+  }
+  const hdr    = hdrIdx >= 0 ? rows[hdrIdx] : headers;
+  const balCol = hdr.findIndex(c => c.toLowerCase().includes('baldinho'));
+  if (balCol < 0) return null;
+
+  const dataCols = [];
+  for (let c = balCol + 1; c < hdr.length; c++) { if ((hdr[c] || '').trim()) dataCols.push(c); }
+
+  const rawData = {}, baseInfo = {};
+  let totals = null, subtotals = null;
+  const startRow = hdrIdx >= 0 ? hdrIdx + 1 : 0;
+
+  for (let r = startRow; r < rows.length; r++) {
+    const row   = rows[r];
+    const label = (row[balCol] || '').trim();
+    if (!label) {
+      const vals = dataCols.map(c => (row[c] || '').trim());
+      if (vals.some(v => /lev/i.test(v)) && !totals)                   totals    = vals;
+      else if (vals.some(v => /^\d+[\–\-]\d+$/.test(v)) && !subtotals) subtotals = vals;
+      continue;
+    }
+    const meta = matchBaldinho(label, '', '');
+    if (!meta) continue;
+    const cells = dataCols.map(c => (row[c] || '').trim());
+    rawData[meta.key] = cells;
+    const bm = cells.join(' ').match(/([\d][\d\.]*)\s*contatos?/i);
+    if (bm) baseInfo[meta.key] = bm[1];
+  }
+
+  const weekData = {};
+  WEEKS_CFG.forEach((wk, wi) => {
+    weekData[wk.id] = {
+      cells:    {},
+      totals:   totals    ? totals.slice(wi * 4, wi * 4 + 4)         : ['', '', '', ''],
+      subtotal: subtotals ? (subtotals[wi * 4] || null)               : null,
+    };
+    BALDINHO_META.forEach(m => {
+      weekData[wk.id].cells[m.key] = (rawData[m.key] || []).slice(wi * 4, wi * 4 + 4);
+    });
+  });
+
+  return { weekData, baseInfo };
+}
+
+// ─── PARSE BRIEFING ───────────────────────────────────────────────────────────
+// Colunas A→AA (índices 0→26):
+// 0  Link do briefing
+// 1  Data
+// 2  Hora
+// 3  Tag
+// 4  Time responsável
+// 5  Oferta
+// 6  Objetivo
+// 7  Receita no ultimo ano
+// 8  Tipo de instituição
+// 9  Baldinho
+// 10 Tamanho da base
+// 11 Mensagens entregues
+// 12 %entregues
+// 13 Lidos
+// 14 Mensagens respondidas
+// 15 Levantadas
+// 16 %levantadas
+// 17 Convertidas
+// 18 %Conversão
+// 19 Cliques (botão)
+// 20 %Cliques
+// 21 Custo disparo
+// 22 Custo disparo/levantada
+// 23 Custo oferta
+// 24 CPL final
+// 25 CPC
+// 26 Total
+function parseBriefing(headers, rows) {
+  // Use header names for resilience (in case order shifts), fallback to positional
+  const ci = name => {
+    const idx = headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
+    return idx;
+  };
+
+  const iData     = ci('data')      >= 0 ? ci('data')      : 1;
+  const iOferta   = ci('oferta')    >= 0 ? ci('oferta')    : 5;
+  const iObjetivo = ci('objetivo')  >= 0 ? ci('objetivo')  : 6;
+  const iReceita  = ci('receita')   >= 0 ? ci('receita')   : 7;
+  const iTipo     = ci('tipo de')   >= 0 ? ci('tipo de')   : 8;
+  const iBaldinho = ci('baldinho')  >= 0 ? ci('baldinho')  : 9;
+  const iBase     = ci('tamanho')   >= 0 ? ci('tamanho')   : 10;
+  const iEntregas = ci('mensagens entregues') >= 0 ? ci('mensagens entregues') : 11;
+  const iPctEntr  = ci('%entregues')>= 0 ? ci('%entregues'): 12;
+  const iLidos    = ci('lidos')     >= 0 ? ci('lidos')     : 13;
+  // Levantadas: avoid matching %levantadas — find exact or closest
+  let iLev = headers.findIndex(h => /^levantadas?$/i.test(h.trim()));
+  if (iLev < 0) iLev = ci('levantada') >= 0 ? ci('levantada') : 15;
+  const iPctLev   = headers.findIndex(h => /^%levantadas?/i.test(h.trim()));
+  // Convertidas: avoid %conversão
+  let iConv = headers.findIndex(h => /^convertidas?$/i.test(h.trim()));
+  if (iConv < 0) iConv = ci('convertida') >= 0 ? ci('convertida') : 17;
+  const iPctConv  = headers.findIndex(h => /^%convers/i.test(h.trim()));
+  const iCliques  = headers.findIndex(h => /^cliques/i.test(h.trim()));
+  const iPctCli   = headers.findIndex(h => /^%cliques/i.test(h.trim()));
+  const iCusto    = headers.findIndex(h => /^custo disparo$/i.test(h.trim()));
+  const iCustoLev = headers.findIndex(h => /custo disparo.levantada/i.test(h.trim()));
+  const iCustoOf  = headers.findIndex(h => /custo oferta/i.test(h.trim()));
+  const iCPL      = headers.findIndex(h => /^cpl/i.test(h.trim()));
+  const iCPC      = headers.findIndex(h => /^cpc$/i.test(h.trim()));
+  const iTotal    = headers.findIndex(h => /^total$/i.test(h.trim()));
+
+  console.log('[BRIEFING] Levantadas col=' + iLev + ' Convertidas col=' + iConv + ' Custo col=' + iCusto + ' CPL col=' + iCPL);
+
+  const toNum = s => {
+    if (!s) return null;
+    const n = parseFloat(String(s).replace(/[^\d,.\-]/g, '').replace(',', '.'));
+    return isNaN(n) ? null : n;
+  };
+  const toInt = s => { const n = toNum(s); return n != null ? Math.round(n) : null; };
+  const toPct = s => {
+    if (!s) return null;
+    const str = String(s).replace('%', '').trim();
+    const n = parseFloat(str.replace(',', '.'));
+    return isNaN(n) ? null : n;
+  };
+  const v = (row, i) => (i >= 0 && row[i] != null ? String(row[i]).trim() : '');
+
+  const records = [];
+  for (const row of rows) {
+    const dataStr = v(row, iData);
+    if (!dataStr) continue;
+
+    // Parse date
+    let day = '', month = '';
+    const m1 = dataStr.match(/^(\d{1,2})[\/\-](\d{1,2})/);
+    const m2 = dataStr.match(/(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+    if (m1)      { day = m1[1].padStart(2, '0'); month = m1[2].padStart(2, '0'); }
+    else if (m2) { day = m2[3];                  month = m2[2]; }
+    else continue;
+    const dateKey = day + '/' + month;
+
+    const baldinhoRaw = v(row, iBaldinho);
+    const tipoRaw     = v(row, iTipo);
+    const receitaRaw  = v(row, iReceita);
+    const meta        = matchBaldinho(baldinhoRaw, tipoRaw, receitaRaw);
+
+    records.push({
+      date:        dateKey,
+      baldinho:    meta ? meta.key   : baldinhoRaw,
+      baldinhoCls: meta ? meta.cls   : '',
+      baldinhoHdr: meta ? meta.hdr   : '#888',
+      oferta:      v(row, iOferta),
+      objetivo:    v(row, iObjetivo),
+      tipo:        tipoRaw,
+      receita:     receitaRaw,
+      base:        toInt(v(row, iBase)),
+      entregues:   toInt(v(row, iEntregas)),
+      pctEntregues:toPct(v(row, iPctEntr)),
+      lidos:       toInt(v(row, iLidos)),
+      levantadas:  toInt(v(row, iLev)),
+      pctLev:      toPct(v(row, iPctLev)),
+      convertidas: toInt(v(row, iConv)),
+      pctConv:     toPct(v(row, iPctConv)),
+      cliques:     toInt(v(row, iCliques)),
+      pctCliques:  toPct(v(row, iPctCli)),
+      custo:       toNum(v(row, iCusto)),
+      custoLev:    toNum(v(row, iCustoLev)),
+      custoOferta: toNum(v(row, iCustoOf)),
+      cpl:         toNum(v(row, iCPL)),
+      cpc:         toNum(v(row, iCPC)),
+      total:       toNum(v(row, iTotal)),
+    });
+  }
+
+  console.log('[BRIEFING] parsed', records.length, 'records');
+  return records;
+}
+
+// ─── REAL MAP ─────────────────────────────────────────────────────────────────
+function buildRealMap(records) {
+  const map = {};
+  for (const r of records) {
+    const k = r.date + '|' + r.baldinho;
+    if (!map[k]) map[k] = [];
+    map[k].push(r);
+  }
+  return map;
+}
+
+// ─── CELL CLASSIFIER ─────────────────────────────────────────────────────────
+function classifyCell(raw) {
+  if (!raw || raw === '—' || raw === '-' || raw === '') return { type: 'empty' };
+  const lo = raw.toLowerCase();
+  if (lo.includes('pausa') || lo === '⏸') return { type: 'pause' };
+  const isExec    = lo.includes('executado') || lo.includes('exec');
+  const cm        = raw.match(/([\d][\d\.]*)\s*contatos?/i);
+  const contacts  = cm ? cm[1].trim() : null;
+  const lm        = raw.match(/(~?[\d]+[\–\-–][\d]+\s*lev)/i) || raw.match(/(~?[\d]+\s*lev)/i);
+  const lev       = lm ? lm[1].trim() : null;
+  let note = raw
+    .replace(/[\d][\d\.]*\s*contatos?/gi, '')
+    .replace(/~?[\d]+[\–\-–][\d]+\s*lev/gi, '')
+    .replace(/~?[\d]+\s*lev/gi, '')
+    .replace(/já executado|executado|exec\./gi, '')
+    .replace(/[—\-]+/g, '').trim();
+  if (note.length < 3) note = null;
+  if (!contacts && !lev) return { type: 'empty' };
+  return { type: isExec ? 'executed' : 'active', contacts, lev, note };
+}
+
+function projMid(levStr) {
+  if (!levStr) return null;
+  const m = levStr.match(/([\d]+)[\–\-–]([\d]+)/);
+  if (m) return (parseInt(m[1]) + parseInt(m[2])) / 2;
+  const m2 = levStr.match(/([\d]+)/);
+  return m2 ? parseInt(m2[1]) : null;
+}
+
+// ─── RENDER CALENDAR CELL ────────────────────────────────────────────────────
+function renderCell(raw, realRecords) {
+  const c = classifyCell(raw);
+  if (c.type === 'empty') return '<td class="day-cell empty">—</td>';
+  if (c.type === 'pause') return '<td class="day-cell pause">⏸ pausa<br><small style="font-size:10px">respeitar 15d</small></td>';
+
+  let realHTML = '';
+  if (realRecords && realRecords.length > 0) {
+    const totalLev   = realRecords.reduce((s, r) => s + (r.levantadas || 0), 0);
+    const totalCusto = realRecords.reduce((s, r) => s + (r.custo      || 0), 0);
+    const mid        = projMid(c.lev);
+    const delta      = mid ? (totalLev >= mid * 1.1 ? 'up' : totalLev <= mid * 0.85 ? 'dn' : 'eq') : 'eq';
+    const icon       = delta === 'up' ? '↑' : delta === 'dn' ? '↓' : '→';
+    const ofertas    = [...new Set(realRecords.map(r => r.oferta).filter(Boolean))].join(', ');
+    realHTML = '<div class="real-divider">' +
+      '<span class="real-label">real</span>' +
+      '<span class="real-lev ' + delta + '">' + icon + ' ' + totalLev + ' lev</span>' +
+      (ofertas    ? '<span class="real-oferta">'  + ofertas + '</span>' : '') +
+      (totalCusto > 0 ? '<span class="real-custo">R$' + Math.round(totalCusto).toLocaleString('pt-BR') + '</span>' : '') +
+      '</div>';
+  }
+
+  return '<td class="day-cell ' + c.type + '">' +
+    (c.type === 'executed' ? '<span class="exec-badge">✅ executado</span>' : '') +
+    (c.contacts ? '<span class="proj-contacts">' + c.contacts + ' contatos</span>' : '') +
+    (c.lev      ? '<span class="proj-lev">'      + c.lev      + '</span>'           : '') +
+    (c.note     ? '<span class="proj-note">'     + c.note     + '</span>'           : '') +
+    realHTML + '</td>';
+}
+
+// ─── BUILD CALENDAR TABLE ─────────────────────────────────────────────────────
+function buildTable(weekIds, weekData, realMap) {
+  const weeks = weekIds.map(id => ({ cfg: WEEKS_CFG.find(w => w.id === id), wd: weekData[id] }));
+
+  let r1 = '<tr><th rowspan="2" style="background:#1a2940;color:#fff;font-size:12px;padding:8px 12px;text-align:center;min-width:92px;border-right:2px solid rgba(255,255,255,0.2)">Baldinho</th>';
+  weeks.forEach(({ cfg }, wi) => {
+    r1 += '<th colspan="4" class="wk-header">' + cfg.label + '</th>';
+    if (wi < weeks.length - 1) r1 += '<th class="col-sep" rowspan="2"></th>';
+  });
+  r1 += '</tr><tr>';
+  weeks.forEach(({ cfg }) => cfg.days.forEach(d => {
+    const parts = d.split('\n');
+    r1 += '<th class="day-header">' + parts[0] + '<br><span style="opacity:0.65;font-size:10px">' + parts[1] + '</span></th>';
+  }));
+  r1 += '</tr>';
+
+  let body = '';
+  BALDINHO_META.forEach(m => {
+    body += '<tr class="' + m.cls + '"><td class="row-label">' + m.name + '</td>';
+    weeks.forEach(({ cfg, wd }, wi) => {
+      const cells = (wd && wd.cells[m.key]) || ['', '', '', ''];
+      cfg.dates.forEach((date, di) => {
+        const real = realMap ? (realMap[date + '|' + m.key] || null) : null;
+        body += renderCell(cells[di], real);
+      });
+      if (wi < weeks.length - 1) body += '<td class="col-sep"></td>';
+    });
+    body += '</tr>';
+  });
+
+  let totRow = '<tr class="totals-row"><td style="font-family:var(--mono);font-size:11px;padding:7px 12px;text-align:left;color:rgba(255,255,255,0.55)">Proj. lev.</td>';
+  weeks.forEach(({ wd }, wi) => {
+    ((wd && wd.totals) || ['', '', '', '']).forEach(t => { totRow += '<td>' + (t || '—') + '</td>'; });
+    if (wi < weeks.length - 1) totRow += '<td class="col-sep"></td>';
+  });
+  totRow += '</tr>';
+
+  const hasSub = weeks.some(({ wd }) => wd && wd.subtotal);
+  let subRow = '';
+  if (hasSub) {
+    subRow = '<tr class="subtotal-row"><td style="font-family:var(--mono);font-size:11px;padding:8px 12px;color:rgba(255,255,255,0.5)"></td>';
+    weeks.forEach(({ wd }, wi) => {
+      subRow += '<td colspan="4">' + ((wd && wd.subtotal) || '') + '</td>';
+      if (wi < weeks.length - 1) subRow += '<td class="col-sep"></td>';
+    });
+    subRow += '</tr>';
+  }
+
+  return '<table><thead>' + r1 + '</thead><tbody>' + body + totRow + subRow + '</tbody></table>';
+}
+
+// ─── SUMMARY CARDS (por semana) ───────────────────────────────────────────────
+function buildWeekCards(weekId, records, weekData) {
+  const wk       = WEEKS_CFG.find(w => w.id === weekId);
+  const allDates = wk ? wk.dates : WEEKS_CFG.flatMap(w => w.dates);
+  const rel      = records.filter(r => allDates.includes(r.date));
+  if (!rel.length) return '';
+
+  const totalLev  = rel.reduce((s, r) => s + (r.levantadas  || 0), 0);
+  const totalCusto= rel.reduce((s, r) => s + (r.custo       || 0), 0);
+  const totalConv = rel.reduce((s, r) => s + (r.convertidas || 0), 0);
+  const cpl       = totalLev > 0 && totalCusto > 0 ? totalCusto / totalLev : null;
+
+  let projMin = 0, projMax = 0;
+  if (weekData && wk) {
+    const wd = weekData[weekId];
+    if (wd && wd.subtotal) {
+      const m = wd.subtotal.match(/([\d]+)[\–\-]([\d]+)/);
+      if (m) { projMin = parseInt(m[1]); projMax = parseInt(m[2]); }
+    } else if (wd && wd.totals) {
+      wd.totals.filter(Boolean).forEach(t => {
+        const m = t.match(/([\d]+)[\–\-]([\d]+)/);
+        if (m) { projMin += parseInt(m[1]); projMax += parseInt(m[2]); }
+      });
+    }
+  }
+
+  const levCls = projMax > 0 ? (totalLev >= projMax ? 'good' : totalLev >= projMin ? 'warn' : 'bad') : '';
+
+  return '<div class="summary-cards">' +
+    '<div class="scard"><div class="scard-label">Levantadas reais</div><div class="scard-value ' + levCls + '">' + totalLev + '</div>' + (projMin > 0 ? '<div class="scard-sub">proj. ' + projMin + '–' + projMax + '</div>' : '') + '</div>' +
+    '<div class="scard"><div class="scard-label">Disparos realizados</div><div class="scard-value">' + rel.length + '</div></div>' +
+    (totalCusto > 0 ? '<div class="scard"><div class="scard-label">Custo total</div><div class="scard-value" style="font-size:16px">R$' + Math.round(totalCusto).toLocaleString('pt-BR') + '</div></div>' : '') +
+    (cpl ? '<div class="scard"><div class="scard-label">Custo / levantada</div><div class="scard-value" style="font-size:16px">R$' + cpl.toFixed(2).replace('.', ',') + '</div></div>' : '') +
+    (totalConv > 0 ? '<div class="scard"><div class="scard-label">Convertidas</div><div class="scard-value good">' + totalConv + '</div><div class="scard-sub">' + (totalConv / totalLev * 100).toFixed(1) + '% tx conv.</div></div>' : '') +
+    '</div>';
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function fmtBRL(n) {
+  if (n == null) return '';
+  return 'R$' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function sortByDate(arr) {
+  return [...arr].sort((a, b) => {
+    const [da, ma] = a.date.split('/').map(Number);
+    const [db, mb] = b.date.split('/').map(Number);
+    return (ma * 100 + da) - (mb * 100 + db);
+  });
+}
+
+function weekSepRow(wt, colspan) {
+  return '<tr class="wk-sep"><td colspan="' + colspan + '">' + wt.label + '</td>' +
+    '<td class="num">' + wt.lev + ' lev</td>' +
+    '<td class="num">' + (wt.custo > 0 ? 'R$' + Math.round(wt.custo).toLocaleString('pt-BR') : '') + '</td>' +
+    '<td class="num">' + (wt.custo > 0 && wt.lev > 0 ? 'R$' + (wt.custo / wt.lev).toFixed(2).replace('.', ',') : '') + '</td>' +
+    (wt.conv > 0 ? '<td class="num">' + wt.conv + ' conv.</td>' : '<td></td>') +
+    '</tr>';
+}
+
+function computeWkTotals(sorted) {
+  const wt = {};
+  WEEKS_CFG.forEach(wk => {
+    const rel = sorted.filter(r => wk.dates.includes(r.date));
+    if (!rel.length) return;
+    wt[wk.id] = {
+      label: wk.label,
+      lev:   rel.reduce((s, r) => s + (r.levantadas  || 0), 0),
+      custo: rel.reduce((s, r) => s + (r.custo       || 0), 0),
+      conv:  rel.reduce((s, r) => s + (r.convertidas || 0), 0),
+      n:     rel.length,
+    };
+  });
+  return wt;
+}
+
+// ─── RESULTADOS — LEVANTADAS ──────────────────────────────────────────────────
+function buildLevCards(records) {
+  if (!records.length) return '';
+  const total  = records.reduce((s, r) => s + (r.levantadas  || 0), 0);
+  const custo  = records.reduce((s, r) => s + (r.custo       || 0), 0);
+  const cpl    = total > 0 && custo > 0 ? custo / total : null;
+
+  // Melhor baldinho = maior %levantadas (lev/base)
+  const byB = {};
+  records.forEach(r => {
+    if (!byB[r.baldinho]) byB[r.baldinho] = { lev: 0, base: 0, n: 0 };
+    byB[r.baldinho].lev  += (r.levantadas || 0);
+    byB[r.baldinho].base += (r.base       || 0);
+    byB[r.baldinho].n++;
+  });
+  const ranked = Object.entries(byB).map(([k, v]) => ({
+    key: k, lev: v.lev, n: v.n,
+    pct: v.base > 0 ? v.lev / v.base * 100 : 0,
+  })).sort((a, b) => b.pct - a.pct);
+  const top = ranked[0];
+
+  // Disparos realizados x projetados
+  const PROJ = { 'Outbound':11,'Anos Anteriores':7,'Concorrência':3,'Retração':3,'Renov HT Pub':2,'Renov Part >4k':2 };
+  const barRows = ranked.map(b => {
+    const proj = PROJ[b.key] || b.n;
+    const pct  = Math.min(100, Math.round(b.n / proj * 100));
+    return '<div style="margin-bottom:10px">' +
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">' +
+        '<span style="font-weight:500">' + b.key + '</span>' +
+        '<span style="font-family:var(--mono);color:var(--text2)">' + b.n + '/' + proj + ' disp · ' + b.lev + ' lev · ' + b.pct.toFixed(1) + '%</span>' +
+      '</div>' +
+      '<div class="bar-wrap"><div class="bar-fill" style="background:#1a2940;width:' + pct + '%"></div></div>' +
+      '</div>';
+  }).join('');
+
+  return '<div class="summary-cards" style="margin-bottom:12px">' +
+    '<div class="scard"><div class="scard-label">Total levantadas</div><div class="scard-value good">' + total + '</div><div class="scard-sub">' + records.length + ' disparos</div></div>' +
+    (custo > 0 ? '<div class="scard"><div class="scard-label">Investimento total</div><div class="scard-value" style="font-size:16px">R$' + Math.round(custo).toLocaleString('pt-BR') + '</div></div>' : '') +
+    (cpl ? '<div class="scard"><div class="scard-label">CPL médio</div><div class="scard-value" style="font-size:16px">R$' + cpl.toFixed(2).replace('.', ',') + '</div></div>' : '') +
+    (top ? '<div class="scard"><div class="scard-label">Melhor % levantadas</div><div class="scard-value" style="font-size:14px;line-height:1.3">' + top.key + '</div><div class="scard-sub">' + top.pct.toFixed(1) + '% · ' + top.lev + ' lev</div></div>' : '') +
+    '</div>' +
+    '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:16px">' +
+      '<div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:12px">Disparos realizados × projetados por baldinho</div>' +
+      barRows +
+    '</div>';
+}
+
+function buildLevTable(records) {
+  if (!records.length) return '<div class="state-box">Nenhum disparo registrado ainda.</div>';
+  const sorted  = sortByDate(records);
+  const wkTots  = computeWkTotals(sorted);
+  const weekOf  = date => WEEKS_CFG.find(w => w.dates.includes(date));
+  let lastWk = null, rows = '';
+
+  for (const r of sorted) {
+    const wk   = weekOf(r.date);
+    const wkId = wk ? wk.id : null;
+    if (wkId && wkId !== lastWk) {
+      lastWk = wkId;
+      if (wkTots[wkId]) rows += weekSepRow(wkTots[wkId], 3);
+    }
+    const pctLevStr = r.pctLev != null
+      ? r.pctLev.toFixed(1) + '%'
+      : (r.base && r.levantadas ? (r.levantadas / r.base * 100).toFixed(1) + '%' : '—');
+
+    rows += '<tr>' +
+      '<td style="font-family:var(--mono);font-size:11px;color:var(--text2)">' + r.date + '</td>' +
+      '<td><span class="tag-b" style="background:' + r.baldinhoHdr + '22;color:' + r.baldinhoHdr + '">' + (r.baldinho || '—') + '</span></td>' +
+      '<td style="max-width:180px;font-size:11px">' + (r.oferta || '—') + '</td>' +
+      '<td class="num" style="font-weight:600">' + (r.levantadas != null ? r.levantadas : '—') + '</td>' +
+      '<td class="num">' + (r.custo != null ? fmtBRL(r.custo) : '') + '</td>' +
+      '<td class="num">' + (r.custo && r.levantadas ? 'R$' + (r.custo / r.levantadas).toFixed(2).replace('.', ',') : '') + '</td>' +
+      '<td class="num">' + pctLevStr + '</td>' +
+      '</tr>';
+  }
+
+  return '<table><thead><tr>' +
+    '<th>Data</th><th>Baldinho</th><th>Oferta</th>' +
+    '<th>Levantadas</th><th>Custo</th><th>CPL</th><th>% Lev.</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ─── RESULTADOS — CONVERSÃO ───────────────────────────────────────────────────
+function buildConvCards(records) {
+  const rel = records.filter(r => r.convertidas != null && r.convertidas > 0);
+  if (!rel.length) return '<div style="padding:20px;color:var(--text3);font-family:var(--mono);font-size:13px">Nenhuma conversão registrada ainda.</div>';
+
+  const totalConv = rel.reduce((s, r) => s + (r.convertidas || 0), 0);
+  const totalLev  = rel.reduce((s, r) => s + (r.levantadas  || 0), 0);
+  const custo     = rel.reduce((s, r) => s + (r.custo       || 0), 0);
+  const txConv    = totalLev > 0 ? totalConv / totalLev * 100 : 0;
+  const cpa       = totalConv > 0 && custo > 0 ? custo / totalConv : null;
+
+  const byB = {};
+  rel.forEach(r => {
+    if (!byB[r.baldinho]) byB[r.baldinho] = { conv: 0, lev: 0 };
+    byB[r.baldinho].conv += (r.convertidas || 0);
+    byB[r.baldinho].lev  += (r.levantadas  || 0);
+  });
+  const ranked = Object.entries(byB).map(([k, v]) => ({
+    key: k, conv: v.conv, lev: v.lev,
+    tx: v.lev > 0 ? v.conv / v.lev * 100 : 0,
+  })).sort((a, b) => b.tx - a.tx);
+  const top = ranked[0];
+
+  const barRows = ranked.map(b => {
+    const pct = Math.min(100, b.tx * 5);
+    return '<div style="margin-bottom:10px">' +
+      '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">' +
+        '<span style="font-weight:500">' + b.key + '</span>' +
+        '<span style="font-family:var(--mono);color:var(--text2)">' + b.conv + ' conv / ' + b.lev + ' lev · ' + b.tx.toFixed(1) + '%</span>' +
+      '</div>' +
+      '<div class="bar-wrap"><div class="bar-fill" style="background:#16a34a;width:' + pct.toFixed(0) + '%"></div></div>' +
+      '</div>';
+  }).join('');
+
+  return '<div class="summary-cards" style="margin-bottom:12px">' +
+    '<div class="scard"><div class="scard-label">Total convertidas</div><div class="scard-value good">' + totalConv + '</div><div class="scard-sub">' + txConv.toFixed(1) + '% tx conv.</div></div>' +
+    (cpa ? '<div class="scard"><div class="scard-label">CPA médio</div><div class="scard-value" style="font-size:16px">R$' + cpa.toFixed(2).replace('.', ',') + '</div></div>' : '') +
+    '<div class="scard"><div class="scard-label">De levantadas</div><div class="scard-value">' + totalLev + '</div><div class="scard-sub">originou ' + totalConv + ' conv.</div></div>' +
+    (top ? '<div class="scard"><div class="scard-label">Melhor tx conversão</div><div class="scard-value" style="font-size:14px;line-height:1.3">' + top.key + '</div><div class="scard-sub">' + top.tx.toFixed(1) + '% · ' + top.conv + ' conv.</div></div>' : '') +
+    '</div>' +
+    '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:16px">' +
+      '<div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);margin-bottom:12px">Taxa de conversão por baldinho</div>' +
+      barRows +
+    '</div>';
+}
+
+function buildConvTable(records) {
+  const rel = records.filter(r => r.convertidas != null && r.convertidas > 0);
+  if (!rel.length) return '<div class="state-box">Nenhuma conversão registrada ainda.</div>';
+  const sorted = sortByDate(rel);
+  const wkTots = computeWkTotals(sorted);
+  const weekOf = date => WEEKS_CFG.find(w => w.dates.includes(date));
+  let lastWk = null, rows = '';
+
+  for (const r of sorted) {
+    const wk   = weekOf(r.date);
+    const wkId = wk ? wk.id : null;
+    if (wkId && wkId !== lastWk) {
+      lastWk = wkId;
+      if (wkTots[wkId]) rows += weekSepRow(wkTots[wkId], 3);
+    }
+    const tx = r.levantadas > 0 && r.convertidas > 0
+      ? (r.convertidas / r.levantadas * 100).toFixed(1) + '%'
+      : (r.pctConv != null ? r.pctConv.toFixed(1) + '%' : '—');
+
+    rows += '<tr>' +
+      '<td style="font-family:var(--mono);font-size:11px;color:var(--text2)">' + r.date + '</td>' +
+      '<td><span class="tag-b" style="background:' + r.baldinhoHdr + '22;color:' + r.baldinhoHdr + '">' + (r.baldinho || '—') + '</span></td>' +
+      '<td style="max-width:180px;font-size:11px">' + (r.oferta || '—') + '</td>' +
+      '<td class="num" style="font-weight:600;color:var(--green)">' + (r.convertidas != null ? r.convertidas : '—') + '</td>' +
+      '<td class="num">' + (r.levantadas != null ? r.levantadas : '—') + '</td>' +
+      '<td class="num">' + tx + '</td>' +
+      '<td class="num">' + (r.custo != null ? fmtBRL(r.custo) : '') + '</td>' +
+      '</tr>';
+  }
+
+  return '<table><thead><tr>' +
+    '<th>Data</th><th>Baldinho</th><th>Oferta</th>' +
+    '<th>Convertidas</th><th>Levantadas</th><th>Tx Conv.</th><th>Custo</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ─── LEGEND ───────────────────────────────────────────────────────────────────
+function buildLegend(baseInfo) {
+  return BALDINHO_META.map(b => {
+    const st   = STATIC_META[b.key] || {};
+    const base = baseInfo[b.key] ? baseInfo[b.key] + ' contatos' : '—';
+    return '<div class="legend-card">' +
+      '<div class="legend-card-header" style="background:' + b.hdr + ';color:' + b.hdrT + '">' +
+        '<span>' + b.name + '</span>' +
+        '<span style="font-family:var(--mono);font-size:11px;opacity:0.7">' + base + '</span>' +
+      '</div>' +
+      '<div class="legend-card-body">' +
+        '<strong>Freq:</strong> ' + (st.freq   || '—') + '<br>' +
+        '<strong>Média:</strong> ' + (st.media  || '—') + '<br>' +
+        '<strong>Melhor:</strong> '+ (st.melhor || '—') +
+      '</div>' +
+      '</div>';
+  }).join('');
+}
+
+// ─── RENDER ALL ───────────────────────────────────────────────────────────────
+function renderAll(weekData, baseInfo, records) {
+  const realMap = buildRealMap(records);
+
+  // Calendar
+  document.getElementById('cal-all').innerHTML = buildTable(['s1','s2','s3','s4'], weekData, realMap);
+  ['s1','s2','s3','s4'].forEach(id => {
+    document.getElementById('cal-'   + id).innerHTML   = buildTable([id], weekData, realMap);
+    document.getElementById('cards-' + id).innerHTML   = buildWeekCards(id, records, weekData);
+  });
+  document.getElementById('cards-all').innerHTML = buildWeekCards(null, records, weekData);
+
+  // Results — levantadas
+  document.getElementById('cards-res-lev').innerHTML = buildLevCards(records);
+  document.getElementById('table-res-lev').innerHTML = buildLevTable(records);
+
+  // Results — conversão
+  document.getElementById('cards-res-conv').innerHTML = buildConvCards(records);
+  document.getElementById('table-res-conv').innerHTML = buildConvTable(records);
+
+  // Legend
+  document.getElementById('legendGrid').innerHTML = buildLegend(baseInfo);
+}
+
+// ─── FALLBACK ─────────────────────────────────────────────────────────────────
+function getFallback() {
+  return {
+    weekData: {
+      s1: { subtotal:'63–90', totals:['','','13–18 lev',''], cells:{
+        'Outbound':       ['','','6.000 contatos executado',''],
+        'Anos Anteriores':['','1.345 contatos executado','',''],
+        'Concorrência':   ['','1.461 contatos executado','',''],
+        'Retração':       ['','1.132 contatos executado','',''],
+        'Renov HT Pub':   ['','','',''],
+        'Renov Part >4k': ['','','',''],
+      }},
+      s2: { subtotal:null, totals:['13–18 lev','27–41 lev','23–31 lev',''], cells:{
+        'Outbound':       ['3.496 contatos ~13–18 lev Teste A/B Vale 50|Vale 300','3.496 contatos ~13–18 lev','3.498 contatos ~13–18 lev',''],
+        'Anos Anteriores':['','1.345 contatos ~10–13 lev','1.345 contatos ~10–13 lev',''],
+        'Concorrência':   ['pausa','pausa','pausa','pausa'],
+        'Retração':       ['pausa','pausa','pausa','pausa'],
+        'Renov HT Pub':   ['82 contatos ~1–2 lev','82 contatos ~1–2 lev Renov LT PUB professor','',''],
+        'Renov Part >4k': ['219 contatos ~4–8 lev','','',''],
+      }},
+      s3: { subtotal:'63–91', totals:['23–31 lev','27–47 lev','23–46 lev','19–31 lev'], cells:{
+        'Outbound':       ['2.622 contatos ~13–18 lev','2.622 contatos ~13–18 lev','2.622 contatos ~13–18 lev','2.624 contatos ~13–18 lev'],
+        'Anos Anteriores':['1.345 contatos ~10–13 lev','1.345 contatos ~10–13 lev','',''],
+        'Concorrência':   ['','730 contatos ~4–16 lev','731 contatos ~4–16 lev',''],
+        'Retração':       ['','','566 contatos ~6–12 lev','566 contatos ~6–12 lev'],
+        'Renov HT Pub':   ['pausa','pausa','pausa','pausa'],
+        'Renov Part >4k': ['pausa','pausa','pausa','pausa'],
+      }},
+      s4: { subtotal:'63–92', totals:['','27–41 lev','23–31 lev','13–18'], cells:{
+        'Outbound':       ['','3.496 contatos ~13–18 lev','3.496 contatos ~13–18 lev','3.498 contatos ~13–18 lev'],
+        'Anos Anteriores':['2.690 contatos ~10–13 lev base completa','','',''],
+        'Concorrência':   ['pausa','pausa','pausa','pausa'],
+        'Retração':       ['pausa','pausa','pausa','pausa'],
+        'Renov HT Pub':   ['','82 contatos ~1–2 lev','',''],
+        'Renov Part >4k': ['','219 contatos ~4–8 lev','',''],
+      }},
+    },
+    baseInfo: {
+      'Outbound':'10.490','Anos Anteriores':'2.690','Concorrência':'1.461',
+      'Retração':'1.132','Renov HT Pub':'82','Renov Part >4k':'219',
+    },
+  };
+}
+
+// ─── LOAD ─────────────────────────────────────────────────────────────────────
+async function loadData() {
+  const dot  = document.getElementById('syncDot');
+  const txt  = document.getElementById('syncText');
+  const base = document.getElementById('baseDate');
+  dot.className    = 'dot loading';
+  txt.textContent  = 'buscando Google Sheets...';
+
+  const fb = getFallback();
+  let weekData = fb.weekData, baseInfo = fb.baseInfo, records = [];
+
+  try {
+    const { calSheet, briefingSheet } = await findSheets();
+
+    if (calSheet) {
+      const parsed = parseCalendar(calSheet.headers, calSheet.rows);
+      if (parsed) { weekData = parsed.weekData; baseInfo = parsed.baseInfo; }
+    }
+
+    if (briefingSheet) {
+      records = parseBriefing(briefingSheet.headers, briefingSheet.rows);
+    }
+
+    // Debug box
+    const dbgEl = document.getElementById('debug-box');
+    if (dbgEl) {
+      const lines = [
+        ...(window.__dbg || []),
+        '─────',
+        'briefing: ' + (briefingSheet ? 'gid=' + briefingSheet.gid + ' · ' + briefingSheet.rows.length + ' linhas' : 'NÃO ENCONTRADO'),
+        'registros parseados: ' + records.length,
+        records.length > 0
+          ? 'amostra → data=' + records[0].date + ' baldinho=' + records[0].baldinho + ' lev=' + records[0].levantadas
+          : 'sem registros — headers: ' + (briefingSheet ? briefingSheet.headers.slice(0,10).join(' | ') : 'n/a'),
+      ].filter(Boolean);
+      dbgEl.innerHTML  = lines.map(l => '<div>' + l + '</div>').join('');
+      dbgEl.style.display = 'block';
+    }
+
+    renderAll(weekData, baseInfo, records);
+    dot.className   = 'dot ok';
+    const now       = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    txt.textContent = now + ' · ' + (calSheet ? 'calendário ✓' : 'calendário local') + ' · ' + (briefingSheet ? records.length + ' disparos ✓' : '⚠️ briefing não encontrado');
+    base.textContent = 'Dados ao vivo · ' + now;
+
+  } catch (err) {
+    console.error('[LOAD]', err);
+    dot.className   = 'dot error';
+    txt.textContent = 'Erro: ' + err.message;
+    renderAll(weekData, baseInfo, records);
+  }
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function showWeek(id) {
+  document.querySelectorAll('.week-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  const idx = ['all','s1','s2','s3','s4','results'].indexOf(id);
+  document.querySelectorAll('.week-btn')[idx].classList.add('active');
+}
+
+function showResTab(tab) {
+  document.querySelectorAll('.res-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.res-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('res-panel-' + tab).classList.add('active');
+  document.querySelectorAll('.res-tab')[tab === 'lev' ? 0 : 1].classList.add('active');
+}
+
+loadData();
+</script>
+</body>
+</html>
