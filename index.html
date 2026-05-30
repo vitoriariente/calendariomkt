@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendário de Disparos · Junho 2026 · Estante Mágica</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --amarelo:#F9DC45;--azul:#008ECF;--roxo:#7668AC;
+  --vermelho:#E94B56;--cinza:#595959;--verde:#17a05a;
+  --branco:#fff;--bg:#F4F4F4;--borda:#E2E2E2;--text:#333;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text)}
+
+.header{background:var(--branco);border-bottom:4px solid var(--amarelo);padding:18px 32px;display:flex;align-items:center;justify-content:space-between}
+.header-left{display:flex;align-items:center;gap:13px}
+.logo-mark{width:42px;height:42px;border-radius:10px;background:var(--amarelo);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--cinza)}
+.h-sup{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.08em}
+.h-title{font-size:19px;font-weight:800;color:var(--text)}
+.h-right{display:flex;align-items:center;gap:10px}
+.h-badge{background:var(--azul);color:#fff;font-size:11px;font-weight:700;padding:5px 13px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em}
+.sync-status{font-size:11px;font-weight:600;color:#aaa;display:flex;align-items:center;gap:5px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#ccc}
+.sync-dot.ok{background:var(--verde)}.sync-dot.err{background:var(--vermelho)}.sync-dot.loading{background:var(--amarelo);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.sheet-config{background:#FFF9E0;border-bottom:1px solid #f0e060;padding:10px 32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sheet-config label{font-size:12px;font-weight:700;color:#7a5c00;white-space:nowrap}
+.sheet-config input{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;border:1px solid #e0cc40;border-radius:6px;padding:6px 10px;background:#fff;color:var(--text);width:360px;max-width:100%}
+.sheet-config input:focus{outline:2px solid var(--amarelo);border-color:var(--amarelo)}
+.btn-sync{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;background:var(--amarelo);color:var(--cinza);border:none;border-radius:6px;padding:7px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.05em;transition:opacity .15s}
+.btn-sync:hover{opacity:.8}
+.sheet-help{font-size:11px;color:#a08000;font-weight:600}
+
+.tabs-bar{background:var(--branco);border-bottom:1px solid var(--borda);padding:0 32px;display:flex;gap:2px;overflow-x:auto}
+.tab-btn{padding:13px 18px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;border:none;background:transparent;cursor:pointer;color:#aaa;border-bottom:3px solid transparent;margin-bottom:-1px;text-transform:uppercase;letter-spacing:.05em;transition:color .15s,border-color .15s;white-space:nowrap}
+.tab-btn:hover{color:var(--cinza)}
+.tab-btn.active{color:var(--azul);border-bottom-color:var(--azul)}
+.tab-btn.t-res.active{color:var(--verde);border-bottom-color:var(--verde)}
+.tab-btn.t-geral.active{color:var(--cinza);border-bottom-color:var(--cinza)}
+
+.main{padding:24px 32px;max-width:1100px;margin:0 auto}
+.alerta{background:#FFF9E0;border-left:4px solid var(--amarelo);border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;font-weight:600;color:#7a5c00;margin-bottom:18px}
+.alerta-pausa{background:#F4F1FF;border-left:4px solid var(--roxo);border-radius:0 8px 8px 0;padding:10px 14px;font-size:12px;font-weight:600;color:#4a3d80;margin-bottom:18px}
+
+.resumo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.resumo-card{background:var(--branco);border-radius:12px;border:1px solid var(--borda);padding:14px 16px;display:flex;align-items:center;gap:11px}
+.r-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.r-label{font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em}
+.r-val{font-size:21px;font-weight:800;color:var(--text);line-height:1.1}
+.r-sub{font-size:10px;color:#bbb;font-weight:600;margin-top:1px}
+
+.legenda{display:flex;flex-wrap:wrap;gap:10px;background:var(--branco);border-radius:10px;border:1px solid var(--borda);padding:12px 16px;margin-bottom:20px;align-items:center}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.04em}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.leg-sep{width:1px;height:18px;background:var(--borda);margin:0 4px}
+
+.week-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.day-card{background:var(--branco);border-radius:14px;border:1px solid var(--borda);overflow:hidden}
+.day-card.feriado{opacity:.4}
+.day-header{padding:11px 14px 9px;border-bottom:1px solid var(--borda);display:flex;align-items:center;justify-content:space-between}
+.day-nome{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text)}
+.day-data{font-size:10px;color:#aaa;font-weight:600;margin-top:1px}
+.day-num{font-size:20px;font-weight:800;color:#ddd}
+.tag-feriado{font-size:9px;font-weight:700;background:#FAEEDA;color:#a06000;border-radius:4px;padding:2px 6px;text-transform:uppercase;display:inline-block;margin-top:3px}
+
+.day-rows{display:flex;flex-direction:column}
+.row{padding:9px 12px;border-bottom:1px solid var(--borda);min-height:70px;display:flex;flex-direction:column;justify-content:center}
+.row:last-child{border-bottom:none}
+.row.vazio{opacity:.15;pointer-events:none}
+.row.pausado{opacity:.35}
+.row-nome{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.row-vol{font-size:13px;font-weight:800}
+.row-exp{font-size:10px;font-weight:600;margin-top:1px}
+.row-pausa-tag{font-size:9px;font-weight:700;color:#7668AC;background:#F3F1FF;border-radius:4px;padding:2px 6px;display:inline-block;margin-top:3px}
+
+.row-resultado{display:flex;align-items:center;gap:5px;margin-top:6px;padding-top:6px;border-top:1px dashed rgba(0,0,0,.1)}
+.res-label{font-size:9px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.04em}
+.res-val{font-size:12px;font-weight:800}
+.res-arrow{font-size:13px;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;font-weight:800}
+.res-arrow.acima{background:#E8F9EF;color:#17a05a}.res-arrow.dentro{background:#EAF5FF;color:var(--azul)}.res-arrow.abaixo{background:#FDEAEA;color:var(--vermelho)}
+.res-val.acima{color:#17a05a}.res-val.dentro{color:var(--azul)}.res-val.abaixo{color:var(--vermelho)}
+.res-multi{font-size:9px;font-weight:600;color:#bbb;margin-top:2px}
+
+.row-outbound{background:#EAF5FF}.row-outbound .row-nome{color:#005a8a}.row-outbound .row-vol{color:var(--azul)}.row-outbound .row-exp{color:#0078b0}
+.row-anos{background:#F0FCF5}.row-anos .row-nome{color:#0d5c2c}.row-anos .row-vol{color:#17a05a}.row-anos .row-exp{color:#17a05a}
+.row-concorrencia{background:#FFF0F4}.row-concorrencia .row-nome{color:#8a1020}.row-concorrencia .row-vol{color:var(--vermelho)}.row-concorrencia .row-exp{color:#c23050}
+.row-retracao{background:#FFFBEA}.row-retracao .row-nome{color:#7a5000}.row-retracao .row-vol{color:#c98c00}.row-retracao .row-exp{color:#c98c00}
+.row-renovpart{background:#F3F1FF}.row-renovpart .row-nome{color:#4a3d80}.row-renovpart .row-vol{color:var(--roxo)}.row-renovpart .row-exp{color:#6055a0}
+.row-renovpub{background:#E8FBF5}.row-renovpub .row-nome{color:#005c45}.row-renovpub .row-vol{color:#009970}.row-renovpub .row-exp{color:#009970}
+
+/* ABA RESULTADOS */
+.res-toggle{display:flex;gap:8px;margin-bottom:20px}
+.res-toggle-btn{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;padding:8px 18px;border-radius:8px;border:1.5px solid var(--borda);background:var(--branco);cursor:pointer;color:#aaa;text-transform:uppercase;letter-spacing:.05em;transition:all .15s}
+.res-toggle-btn:hover{border-color:#bbb;color:var(--cinza)}
+.res-toggle-btn.active-sdr{background:#E8F9EF;border-color:#17a05a;color:#17a05a}
+.res-toggle-btn.active-closer{background:#F3F1FF;border-color:var(--roxo);color:var(--roxo)}
+
+.res-section-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.res-section-title::after{content:'';flex:1;height:1px;background:var(--borda)}
+.badge-time{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
+.badge-sdr{background:#E8F9EF;color:#17a05a}
+.badge-closer{background:#F3F1FF;color:var(--roxo)}
+.res-table-wrap{overflow-x:auto;margin-bottom:20px}
+.res-table{width:100%;border-collapse:collapse;font-size:12px}
+.res-table th{font-size:9px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.05em;padding:8px 12px;text-align:left;border-bottom:2px solid var(--borda);white-space:nowrap}
+.res-table td{padding:9px 12px;border-bottom:1px solid #f5f5f5;font-weight:600;vertical-align:middle}
+.res-table tr:last-child td{border-bottom:none}
+.res-table tr:hover td{background:#fafafa}
+.badge-perf{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.badge-acima{background:#E8F9EF;color:#17a05a}.badge-dentro{background:#EAF5FF;color:var(--azul)}.badge-abaixo{background:#FDEAEA;color:var(--vermelho)}
+.tag-bald{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;display:inline-block}
+.tag-outbound{background:#EAF5FF;color:#005a8a}.tag-anos{background:#F0FCF5;color:#0d5c2c}
+.tag-concorrencia{background:#FFF0F4;color:#8a1020}.tag-retracao{background:#FFFBEA;color:#7a5000}
+.tag-renovpart{background:#F3F1FF;color:#4a3d80}.tag-renovpub{background:#E8FBF5;color:#005c45}
+.tag-renovacao{background:#F3F1FF;color:#4a3d80}
+
+.empty-state{text-align:center;padding:40px 20px;color:#bbb}
+.empty-state .ei{font-size:36px;margin-bottom:10px}
+.empty-state p{font-size:13px;font-weight:600}
+.empty-state small{font-size:11px;display:block;margin-top:4px}
+
+.geral-semana{margin-bottom:28px}
+.geral-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--roxo);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.geral-label::after{content:'';flex:1;height:1px;background:var(--borda)}
+.geral-total{font-size:11px;color:#aaa;font-weight:600;margin-top:8px}
+
+.regras{background:var(--branco);border-radius:12px;border:1px solid var(--borda);padding:16px 20px;margin-top:22px}
+.regras-title{font-size:11px;font-weight:800;color:var(--cinza);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.regras-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.regra-item{display:flex;gap:8px;align-items:flex-start}
+.regra-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.regra-item p{font-size:11px;color:#777;font-weight:600;line-height:1.5}
+.regra-item strong{color:var(--text)}
+
+@media(max-width:700px){
+  .week-grid{grid-template-columns:repeat(2,1fr)}
+  .resumo-grid{grid-template-columns:repeat(2,1fr)}
+  .main{padding:14px}.header,.sheet-config{padding-left:14px;padding-right:14px}
+  .tabs-bar{padding:0 14px}.sheet-config input{width:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo-mark">EM</div>
+    <div>
+      <div class="h-sup">Estante Mágica · Marketing</div>
+      <div class="h-title">Calendário de Disparos · Junho 2026</div>
+    </div>
+  </div>
+  <div class="h-right">
+    <div class="sync-status">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">Aguardando planilha</span>
+    </div>
+    <div class="h-badge">Junho 2026</div>
+  </div>
+</header>
+
+<div class="sheet-config">
+  <label>🔗 ID da planilha:</label>
+  <input type="text" id="sheetId" placeholder="Cole o ID da planilha Google Sheets de junho" />
+  <button class="btn-sync" onclick="syncSheet()">↻ Sincronizar</button>
+  <span class="sheet-help">Planilha pública · compartilhar → qualquer pessoa com o link → visualizador</span>
+</div>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="showTab(0)">S1 · 04–06/06</button>
+  <button class="tab-btn" onclick="showTab(1)">S2 · 11–14/06</button>
+  <button class="tab-btn" onclick="showTab(2)">S3 · 18–21/06</button>
+  <button class="tab-btn" onclick="showTab(3)">S4 · 25–28/06</button>
+  <button class="tab-btn t-res" onclick="showTab(4)">📊 Resultados</button>
+  <button class="tab-btn t-geral" onclick="showTab(5)">Visão Geral</button>
+</div>
+
+<div class="main">
+  <div class="legenda">
+    <div class="leg"><div class="leg-dot" style="background:#008ECF"></div>Outbound novas</div>
+    <div class="leg"><div class="leg-dot" style="background:#17a05a"></div>Anos anteriores</div>
+    <div class="leg"><div class="leg-dot" style="background:#E94B56"></div>Concorrência</div>
+    <div class="leg"><div class="leg-dot" style="background:#c98c00"></div>Retração</div>
+    <div class="leg"><div class="leg-dot" style="background:#7668AC"></div>Renov. part &gt;2k</div>
+    <div class="leg"><div class="leg-dot" style="background:#009970"></div>Renov. pub HT</div>
+    <div class="leg-sep"></div>
+    <div class="leg"><span style="background:#E8F9EF;color:#17a05a;font-size:11px;font-weight:800;padding:2px 8px;border-radius:4px">↑ Acima</span></div>
+    <div class="leg"><span style="background:#EAF5FF;color:#008ECF;font-size:11px;font-weight:800;padding:2px 8px;border-radius:4px">→ Dentro</span></div>
+    <div class="leg"><span style="background:#FDEAEA;color:#E94B56;font-size:11px;font-weight:800;padding:2px 8px;border-radius:4px">↓ Abaixo</span></div>
+    <div class="leg-sep"></div>
+    <div class="leg"><span style="background:#F3F1FF;color:#7668AC;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px">⏸ Em pausa</span></div>
+  </div>
+  <div id="content"></div>
+  <div class="regras">
+    <div class="regras-title">📋 Regras de distribuição</div>
+    <div class="regras-grid">
+      <div class="regra-item"><div class="regra-dot" style="background:var(--azul)"></div><p><strong>Outbound (13k):</strong> dividido em 2 lotes de ~6.500. S1+S2 recebem o 1º lote; S3+S4 recebem o 2º lote (15 dias de espaçamento).</p></div>
+      <div class="regra-item"><div class="regra-dot" style="background:#17a05a"></div><p><strong>Baldinhos menores:</strong> base inteira em S1 e S3. S2 e S4 ficam em pausa (regra 15 dias). Outbound dispara toda semana (¼ da base por semana).</p></div>
+      <div class="regra-item"><div class="regra-dot" style="background:var(--roxo)"></div><p><strong>Regra 15 dias:</strong> baldinhos menores disparam em S1 → pausam S2 → voltam S3 → pausam S4. Todo contato recebe no mínimo 2x ao mês com 15 dias de intervalo.</p></div>
+      <div class="regra-item"><div class="regra-dot" style="background:#c98c00"></div><p><strong>S1 tem apenas 3 dias úteis</strong> (07/06 é feriado). Ex: Anos Anteriores → 1.810 ÷ 2 dias = 905/dia. Outbound → 3.254 ÷ 3 dias = ~1.085/dia.</p></div>
+      <div class="regra-item"><div class="regra-dot" style="background:var(--vermelho)"></div><p><strong>Resultados SDR:</strong> métrica = levantadas. Setas mostram se ficou acima, dentro ou abaixo do esperado por disparo.</p></div>
+      <div class="regra-item"><div class="regra-dot" style="background:var(--roxo)"></div><p><strong>Resultados Closer:</strong> métrica = conversões. Aba separada dentro de Resultados.</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ORDEM = ['outbound','anos','concorrencia','retracao','renovpart','renovpub'];
+
+const B = {
+  outbound:     {nome:"Outbound novas",    baseTotal:13015, exp:[15,19], cls:"row-outbound",    tag:"tag-outbound"},
+  anos:         {nome:"Anos anteriores",   baseTotal:1810,  exp:[6,10],  cls:"row-anos",        tag:"tag-anos"},
+  concorrencia: {nome:"Concorrência",      baseTotal:1610,  exp:[6,10],  cls:"row-concorrencia",tag:"tag-concorrencia"},
+  retracao:     {nome:"Retração",          baseTotal:1268,  exp:[4,8],   cls:"row-retracao",    tag:"tag-retracao"},
+  renovpart:    {nome:"Renov. part >2k",   baseTotal:212,   exp:[2,4],   cls:"row-renovpart",   tag:"tag-renovpart"},
+  renovpub:     {nome:"Renov. pub HT",     baseTotal:363,   exp:[4,6],   cls:"row-renovpub",    tag:"tag-renovpub"},
+};
+
+// VOLUME por dia:
+// Outbound: base inteira / 4 semanas / dias ativos da semana (~1.085/dia)
+// Baldinhos menores: base inteira / dias ativos da semana (S1 e S3 apenas)
+// S2 e S4: baldinhos menores em pausa (regra 15 dias)
+function volPorDia(key, si) {
+  const b = B[key];
+  const aloc = alocSemana[si][key] || [];
+  if (!aloc.length) return 0;
+  if (key === 'outbound') return Math.round((b.baseTotal / 4) / aloc.length);
+  return Math.round(b.baseTotal / aloc.length);
+}
+
+
+// Plano: dias de cada semana
+const plano = [
+  {label:"S1",range:"04–06/06",dias:[
+    {d:"Seg",dt:"04/06",iso:"2026-06-04",num:"04",f:false},
+    {d:"Ter",dt:"05/06",iso:"2026-06-05",num:"05",f:false},
+    {d:"Qua",dt:"06/06",iso:"2026-06-06",num:"06",f:false},
+    {d:"Qui",dt:"07/06",iso:"2026-06-07",num:"07",f:true},
+  ]},
+  {label:"S2",range:"11–14/06",dias:[
+    {d:"Seg",dt:"11/06",iso:"2026-06-11",num:"11",f:false},
+    {d:"Ter",dt:"12/06",iso:"2026-06-12",num:"12",f:false},
+    {d:"Qua",dt:"13/06",iso:"2026-06-13",num:"13",f:false},
+    {d:"Qui",dt:"14/06",iso:"2026-06-14",num:"14",f:false},
+  ]},
+  {label:"S3",range:"18–21/06",dias:[
+    {d:"Seg",dt:"18/06",iso:"2026-06-18",num:"18",f:false},
+    {d:"Ter",dt:"19/06",iso:"2026-06-19",num:"19",f:false},
+    {d:"Qua",dt:"20/06",iso:"2026-06-20",num:"20",f:false},
+    {d:"Qui",dt:"21/06",iso:"2026-06-21",num:"21",f:false},
+  ]},
+  {label:"S4",range:"25–28/06",dias:[
+    {d:"Seg",dt:"25/06",iso:"2026-06-25",num:"25",f:false},
+    {d:"Ter",dt:"26/06",iso:"2026-06-26",num:"26",f:false},
+    {d:"Qua",dt:"27/06",iso:"2026-06-27",num:"27",f:false},
+    {d:"Qui",dt:"28/06",iso:"2026-06-28",num:"28",f:false},
+  ]},
+];
+
+// Alocação de dias por baldinho por semana — intercalados
+// Outbound 3x/sem (S1 só 3 dias úteis → todos os 3); S2-S4 → 3 de 4 dias
+// Baldinhos 2x/sem nos dias ativos das semanas que disparam (S1 e S3)
+const alocSemana = [
+  // S1 — 3 dias úteis (qui 07/06 feriado). Baldinhos menores: base inteira.
+  {outbound:[0,1,2], anos:[0,2], concorrencia:[0,1], retracao:[1,2], renovpart:[1], renovpub:[2]},
+  // S2 — 4 dias. Só outbound (baldinhos menores em pausa — regra 15 dias).
+  {outbound:[1,2,3]},
+  // S3 — 4 dias. Baldinhos menores voltam com base inteira (15 dias após S1).
+  {outbound:[0,1,3], anos:[0,2], concorrencia:[1,3], retracao:[2,3], renovpart:[2], renovpub:[1]},
+  // S4 — 4 dias. Só outbound (baldinhos menores em pausa — regra 15 dias).
+  {outbound:[0,2,3]},
+];
+
+// Volume por disparo
+
+// Verifica se baldinho está ativo nessa semana
+function ativoNaSemana(key, si){
+  return (alocSemana[si][key]||[]).length > 0;
+}
+
+// Verifica se baldinho está ativo nesse dia
+function ativoNoDia(key, si, di){
+  const s = plano[si];
+  if(s.dias[di].f) return false;
+  return (alocSemana[si][key]||[]).includes(di);
+}
+
+function buildMap(si){
+  const map = [{},{},{},{}];
+  ORDEM.forEach(k=>{
+    (alocSemana[si][k]||[]).forEach(di=>{
+      if(!plano[si].dias[di].f) map[di][k] = volPorDia(k, si);
+    });
+  });
+  return map;
+}
+
+const alertas=[
+  '📅 S1: todos os baldinhos ativos. Outbound = ¼ da base (~3.254). Demais = base inteira. S1 tem só 3 dias úteis (qui 07/06 feriado).',
+  '⏸ S2: baldinhos menores em pausa (regra 15 dias desde S1). Apenas outbound dispara (~3.254 contatos).',
+  '📅 S3: baldinhos menores retomam com base inteira (15 dias após S1). Outbound segue com mais ¼ da base.',
+  '⏸ S4: baldinhos menores em pausa (regra 15 dias desde S3). Apenas outbound dispara.',
+];
+
+let disparos = {};
+let resView = 'sdr';
+
+function fmt(n){return Math.round(n).toLocaleString('pt-BR')}
+function normBald(b){
+  if(!b) return null;
+  b=b.toLowerCase().trim();
+  if(b.includes('outbound')) return 'outbound';
+  if(b.includes('anos')) return 'anos';
+  if(b.includes('concorr')) return 'concorrencia';
+  if(b.includes('retra')) return 'retracao';
+  if(b.includes('pub')) return 'renovpub';
+  if(b.includes('renov')) return 'renovpart';
+  return null;
+}
+function normData(d){
+  if(!d) return null;
+  d=String(d).trim();
+  const m1=d.match(/^(\d{1,2})\/(\d{1,2})/);
+  if(m1) return `2026-${m1[2].padStart(2,'0')}-${m1[1].padStart(2,'0')}`;
+  const m2=d.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if(m2) return `${m2[1]}-${String(Number(m2[2])+1).padStart(2,'0')}-${m2[3].padStart(2,'0')}`;
+  return null;
+}
+function getPerf(real,min,max){return real>max?'acima':real<min?'abaixo':'dentro'}
+function arrow(p){return p==='acima'?'↑':p==='abaixo'?'↓':'→'}
+function parseNum(v){if(v===null||v===undefined||v==='') return 0; if(typeof v==='number') return v; return Number(String(v).replace(/[^0-9,.-]/g,'').replace(',','.'))||0;}
+
+function getAgg(iso,baldKey,time){
+  const lista=(disparos[iso]||[]).filter(d=>d.bald===baldKey&&d.time===time);
+  if(!lista.length) return null;
+  return {lev:lista.reduce((s,d)=>s+d.levantadas,0),conv:lista.reduce((s,d)=>s+d.conversoes,0),count:lista.length};
+}
+
+function renderDayRows(si,di,map,feriado){
+  const s=plano[si]; const dia=s.dias[di];
+  if(feriado) return `<div class="day-rows"><div style="padding:14px 12px;font-size:12px;font-weight:700;color:#bbb">— Feriado</div></div>`;
+  let html='<div class="day-rows">';
+  ORDEM.forEach(k=>{
+    const b=B[k];
+    const ativoSem=ativoNaSemana(k,si);
+    const ativoDia=ativoNoDia(k,si,di);
+    const vol=map[di][k]||0;
+
+    // expectativa fixa por dia de disparo (independente do volume)
+    const dispMin=b.exp[0];
+    const dispMax=b.exp[1];
+
+    let resHtml='';
+    if(ativoDia){
+      const agg=getAgg(dia.iso,k,'SDR');
+      if(agg){
+        const perf=getPerf(agg.lev,dispMin,dispMax);
+        const multi=agg.count>1?`<div class="res-multi">${agg.count} disparos somados</div>`:'';
+        resHtml=`<div class="row-resultado"><span class="res-label">Lev. SDR:</span><span class="res-val ${perf}">${agg.lev}</span><span class="res-arrow ${perf}">${arrow(perf)}</span></div>${multi}`;
+      } else {
+        resHtml=`<div class="row-resultado"><span class="res-label" style="color:#ddd;font-size:9px">Aguardando resultado</span></div>`;
+      }
+    }
+
+    // Estado do row
+    let rowClass = b.cls;
+    let extra = '';
+    if(!ativoSem){
+      rowClass += ' pausado';
+      extra = `<span class="row-pausa-tag">⏸ pausa 15 dias</span>`;
+      resHtml = '';
+    } else if(!ativoDia){
+      rowClass += ' vazio';
+      resHtml = '';
+    }
+
+    const volTxt = ativoDia ? `${fmt(vol)} contatos` : (ativoSem ? `–` : `${fmt(b.baseTotal)} total`);
+    const expTxt = ativoDia ? `~${dispMin}–${dispMax} levantadas` : '';
+
+    html+=`<div class="row ${rowClass}">
+      <div class="row-nome">${b.nome}</div>
+      <div class="row-vol">${volTxt}</div>
+      ${expTxt?`<div class="row-exp">${expTxt}</div>`:''}
+      ${extra}
+      ${resHtml}
+    </div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderWeek(si){
+  const s=plano[si]; const map=buildMap(si);
+  const diasAtivos=s.dias.filter(d=>!d.f).length;
+  let totalCont=0,expMin=0,expMax=0,totalRealLev=0,temReal=false;
+  s.dias.forEach((dia,di)=>{
+    Object.entries(map[di]).forEach(([k,vol])=>{
+      totalCont+=vol;
+      expMin+=B[k].exp[0];
+      expMax+=B[k].exp[1];
+    });
+    ORDEM.forEach(k=>{
+      if(map[di][k]){const agg=getAgg(dia.iso,k,'SDR');if(agg){totalRealLev+=agg.lev;temReal=true;}}
+    });
+  });
+
+  let html='';
+  if(alertas[si]) html+=`<div class="${si===0?'alerta':si===2?'alerta':'alerta-pausa'}">${si===0?'📅':si===2?'📅':'⏸'} ${alertas[si]}</div>`;
+
+  html+=`<div class="resumo-grid">
+    <div class="resumo-card"><div class="r-icon" style="background:#E8F5FF">📅</div><div><div class="r-label">Dias ativos</div><div class="r-val">${diasAtivos}</div></div></div>
+    <div class="resumo-card"><div class="r-icon" style="background:#FFF0F5">📨</div><div><div class="r-label">Contatos planejados</div><div class="r-val">${fmt(totalCont)}</div></div></div>
+    <div class="resumo-card"><div class="r-icon" style="background:#FFFBEA">🎯</div><div><div class="r-label">Levantadas esperadas</div><div class="r-val">${expMin}–${expMax}</div></div></div>
+    <div class="resumo-card"><div class="r-icon" style="background:#E8F9EF">✅</div><div><div class="r-label">Levantadas reais SDR</div><div class="r-val" style="color:${temReal?'var(--verde)':'#ddd'}">${temReal?totalRealLev:'–'}</div></div></div>
+  </div>`;
+
+  html+='<div class="week-grid">';
+  s.dias.forEach((dia,di)=>{
+    html+=`<div class="day-card${dia.f?' feriado':''}">
+      <div class="day-header"><div><div class="day-nome">${dia.d}</div><div class="day-data">${dia.dt}</div>${dia.f?'<span class="tag-feriado">Feriado</span>':''}</div><div class="day-num">${dia.num}</div></div>
+      ${renderDayRows(si,di,map,dia.f)}
+    </div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderResultados(){
+  const btnSdr = `<button class="res-toggle-btn${resView==='sdr'?' active-sdr':''}" onclick="setResView('sdr')">📊 SDR · Levantadas</button>`;
+  const btnCloser = `<button class="res-toggle-btn${resView==='closer'?' active-closer':''}" onclick="setResView('closer')">💰 Closer · Conversões</button>`;
+  let html = `<div class="res-toggle">${btnSdr}${btnCloser}</div>`;
+  html += resView==='sdr' ? renderResSdr() : renderResCloser();
+  return html;
+}
+
+function setResView(v){ resView=v; document.getElementById('content').innerHTML=renderResultados(); }
+
+function renderResSdr(){
+  const rows=[];
+  plano.forEach((s,si)=>{
+    const map=buildMap(si);
+    s.dias.forEach((dia,di)=>{
+      if(dia.f) return;
+      (disparos[dia.iso]||[]).filter(d=>d.time==='SDR').forEach(d=>{
+        const bk=d.bald; const b=B[bk]; if(!b) return;
+        const expMin=b.exp[0];
+        const expMax=b.exp[1];
+        const perf=getPerf(d.levantadas,expMin,expMax);
+        rows.push({data:dia.dt,semana:s.label,bk,b,oferta:d.oferta,base:d.base,entregues:d.entregues,lidos:d.lidos,resp:d.resp,lev:d.levantadas,expMin,expMax,perf});
+      });
+    });
+  });
+
+  if(!rows.length) return `<div class="empty-state"><div class="ei">📊</div><p>Nenhum resultado SDR registrado ainda</p><small>Sincronize a planilha de junho para ver os dados</small></div>`;
+
+  const totLev=rows.reduce((s,r)=>s+r.lev,0);
+  const acima=rows.filter(r=>r.perf==='acima').length;
+  const dentro=rows.filter(r=>r.perf==='dentro').length;
+  const abaixo=rows.filter(r=>r.perf==='abaixo').length;
+
+  let html=`<div class="resumo-grid" style="margin-bottom:20px">
+    <div class="resumo-card"><div class="r-icon" style="background:#E8F9EF">🎯</div><div><div class="r-label">Total levantadas</div><div class="r-val" style="color:var(--verde)">${totLev}</div></div></div>
+    <div class="resumo-card"><div class="r-icon" style="background:#E8F9EF">↑</div><div><div class="r-label">Acima</div><div class="r-val" style="color:var(--verde)">${acima}</div><div class="r-sub">disparos</div></div></div>
+    <div class="resumo-card"><div class="r-icon" style="background:#EAF5FF">→</div><div><div class="r-label">Dentro</div><div class="r-val" style="color:var(--azul)">${dentro}</div><div class="r-sub">disparos</div></div></div>
+    <div class="resumo-card"><div class="r-icon" style="background:#FDEAEA">↓</div><div><div class="r-label">Abaixo</div><div class="r-val" style="color:var(--vermelho)">${abaixo}</div><div class="r-sub">disparos</div></div></div>
+  </div>
+  <div class="res-section-title"><span class="badge-time badge-sdr">SDR · Levantadas</span></div>
+  <div class="res-table-wrap"><table class="res-table">
+    <thead><tr><th>Semana</th><th>Data</th><th>Baldinho</th><th>Oferta</th><th>Base</th><th>Entregues</th><th>Lidos</th><th>Resp.</th><th>Esperado</th><th>Real</th><th>Status</th></tr></thead>
+    <tbody>`;
+  rows.forEach(r=>{
+    const bc=r.perf==='acima'?'badge-acima':r.perf==='abaixo'?'badge-abaixo':'badge-dentro';
+    html+=`<tr>
+      <td>${r.semana}</td><td>${r.data}</td>
+      <td><span class="tag-bald ${r.b.tag}">${r.b.nome}</span></td>
+      <td style="color:#888;font-size:11px">${r.oferta||'–'}</td>
+      <td>${r.base?fmt(r.base):'–'}</td><td>${r.entregues?fmt(r.entregues):'–'}</td>
+      <td>${r.lidos?fmt(r.lidos):'–'}</td><td>${r.resp?fmt(r.resp):'–'}</td>
+      <td style="color:#aaa">${r.expMin}–${r.expMax}</td>
+      <td style="font-weight:800;color:${r.perf==='acima'?'var(--verde)':r.perf==='abaixo'?'var(--vermelho)':'var(--azul)'}">${r.lev}</td>
+      <td><span class="badge-perf ${bc}">${arrow(r.perf)} ${r.perf.charAt(0).toUpperCase()+r.perf.slice(1)}</span></td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function renderResCloser(){
+  const rows=[];
+  plano.forEach(s=>{
+    s.dias.forEach(dia=>{
+      if(dia.f) return;
+      (disparos[dia.iso]||[]).filter(d=>d.time==='CLOSER').forEach(d=>{
+        const b=B[d.bald];
+        rows.push({data:dia.dt,semana:s.label,bk:d.bald,b,oferta:d.oferta,base:d.base,entregues:d.entregues,lidos:d.lidos,resp:d.resp,conv:d.conversoes});
+      });
+    });
+  });
+
+  if(!rows.length) return `<div class="empty-state"><div class="ei">💰</div><p>Nenhum resultado Closer registrado ainda</p><small>Sincronize a planilha de junho para ver os dados</small></div>`;
+
+  const totConv=rows.reduce((s,r)=>s+r.conv,0);
+  let html=`<div class="resumo-grid" style="margin-bottom:20px">
+    <div class="resumo-card"><div class="r-icon" style="background:#F3F1FF">💰</div><div><div class="r-label">Total conversões</div><div class="r-val" style="color:var(--roxo)">${totConv}</div></div></div>
+    <div class="resumo-card"><div class="r-icon" style="background:#F3F1FF">📨</div><div><div class="r-label">Disparos closer</div><div class="r-val" style="color:var(--roxo)">${rows.length}</div></div></div>
+  </div>
+  <div class="res-section-title"><span class="badge-time badge-closer">Closer · Conversões</span></div>
+  <div class="res-table-wrap"><table class="res-table">
+    <thead><tr><th>Semana</th><th>Data</th><th>Baldinho</th><th>Oferta</th><th>Base</th><th>Entregues</th><th>Lidos</th><th>Resp.</th><th>Conversões</th></tr></thead>
+    <tbody>`;
+  rows.forEach(r=>{
+    html+=`<tr>
+      <td>${r.semana}</td><td>${r.data}</td>
+      <td><span class="tag-bald ${r.b?r.b.tag:'tag-renovacao'}">${r.b?r.b.nome:r.bk}</span></td>
+      <td style="color:#888;font-size:11px">${r.oferta||'–'}</td>
+      <td>${r.base?fmt(r.base):'–'}</td><td>${r.entregues?fmt(r.entregues):'–'}</td>
+      <td>${r.lidos?fmt(r.lidos):'–'}</td><td>${r.resp?fmt(r.resp):'–'}</td>
+      <td style="font-weight:800;color:var(--roxo)">${r.conv}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function renderGeral(){
+  let html='<div>';
+  plano.forEach((s,si)=>{
+    const map=buildMap(si);
+    let totalCont=0,expMin=0,expMax=0;
+    s.dias.forEach((_,di)=>{ Object.entries(map[di]).forEach(([k,vol])=>{ totalCont+=vol; expMin+=B[k].exp[0]; expMax+=B[k].exp[1]; }); });
+    html+=`<div class="geral-semana"><div class="geral-label">${s.label} · ${s.range}</div><div class="week-grid">`;
+    s.dias.forEach((dia,di)=>{
+      html+=`<div class="day-card${dia.f?' feriado':''}">
+        <div class="day-header"><div><div class="day-nome">${dia.d}</div><div class="day-data">${dia.dt}</div>${dia.f?'<span class="tag-feriado">Feriado</span>':''}</div><div class="day-num">${dia.num}</div></div>
+        ${renderDayRows(si,di,map,dia.f)}
+      </div>`;
+    });
+    html+=`</div><div class="geral-total">${fmt(totalCont)} contatos · ~${expMin}–${expMax} levantadas esperadas</div></div>`;
+  });
+  return html+'</div>';
+}
+
+let tabAtual=0;
+function showTab(idx){
+  tabAtual=idx;
+  document.querySelectorAll('.tab-btn').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  const c=document.getElementById('content');
+  if(idx===4) c.innerHTML=renderResultados();
+  else if(idx===5) c.innerHTML=renderGeral();
+  else c.innerHTML=renderWeek(idx);
+}
+
+function setSyncStatus(e,t){
+  document.getElementById('syncDot').className='sync-dot '+e;
+  document.getElementById('syncLabel').textContent=t;
+}
+
+async function syncSheet(){
+  const id=document.getElementById('sheetId').value.trim();
+  if(!id){alert('Cole o ID da planilha acima.');return;}
+  setSyncStatus('loading','Sincronizando...');
+  const url=`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json`;
+  try{
+    const res=await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    const json=JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    disparos={};
+    let count=0;
+    (json.table.rows||[]).forEach(row=>{
+      const c=row.c; if(!c||c.length<10) return;
+      const iso=normData(c[1]?.v); if(!iso) return;
+      const timeStr=String(c[4]?.v||'').trim().toUpperCase();
+      if(!timeStr.includes('SDR')&&!timeStr.includes('CLOSER')) return;
+      const bald=normBald(String(c[9]?.v||'')); if(!bald) return;
+      if(!disparos[iso]) disparos[iso]=[];
+      disparos[iso].push({
+        time:timeStr.includes('SDR')?'SDR':'CLOSER', bald,
+        oferta:String(c[5]?.v||''),
+        base:parseNum(c[10]?.v), entregues:parseNum(c[11]?.v),
+        lidos:parseNum(c[13]?.v), resp:parseNum(c[14]?.v),
+        levantadas:parseNum(c[15]?.v), conversoes:parseNum(c[17]?.v),
+      });
+      count++;
+    });
+    setSyncStatus('ok',`Sincronizado · ${count} linha${count!==1?'s':''}`);
+    localStorage.setItem('em_sheet_id_jun',id);
+    showTab(tabAtual);
+  }catch(e){
+    setSyncStatus('err','Erro ao sincronizar');
+    console.error(e);
+    alert('Não foi possível ler a planilha.\n\nVerifique:\n1. ID correto\n2. Planilha pública (visualizador)\n3. Dados na primeira aba');
+  }
+}
+
+window.addEventListener('load',()=>{
+  const saved=localStorage.getItem('em_sheet_id_jun');
+  if(saved) document.getElementById('sheetId').value=saved;
+  showTab(0);
+});
+</script>
+</body>
+</html>
